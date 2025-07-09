@@ -1,0 +1,52 @@
+# Process error plus observation error model:
+fGSSPois <- function(){
+  ### -------------------------
+  ### Notes
+  ### -------------------------
+  ### 1: sigma(sd) in JAGS models with normal models are parameterized according to 1/(variance)^2
+  ### 2: Lognormal distributions are parameterized so that mu and 1/(variance)^2 is on the log 
+  ###    scale (see p46 in https://people.stat.sc.edu/hansont/stat740/jags_user_manual.pdf)
+  ### 3: mean=exp(mu + (sigma^2/2)), solving for mu gives log(mean)-sigma^2/2
+  ###    phi is the est. annual reproductive output with environmental noise
+  
+  ### -------------------------
+  ### PRIORS
+  ### -------------------------
+  ### Model parameters
+  theta     ~ dbeta(theta.a, theta.b)   ### Rate parameter
+  Kparam    ~ dgamma(K.shape, K.rate)   ### Asymptotic values
+  
+  ### variance parameters
+  # used these priors for sigma before
+  #log_sigma ~ dnorm(-0.5, 0.1)
+  #sigma     <- exp(log_sigma)
+  sigma     ~ dunif(0,2)
+  sigsq.inv <- 1/pow(sigma,2)
+  
+  ### -------------------------
+  ### Likelihood
+  ### -------------------------
+  for(k in 1:K){
+    for(i in 1:ind){
+      ### initial value
+      True.Y[i, 1, k] <- Y[i, 1, k]
+      
+      
+      for(j in 2:lens[i]){ # for each reproductive lifespan
+        
+        ### Likelihood function
+        
+        ### Trajectory: K * exp( e^(-theta * t) * log(n0/k) )
+        ### delta.t: difference in X[i] - X[(i-1)]
+        
+        True.Y[i, j, k]       <- Kparam * exp( log(True.Y[i, (j-1), k]/Kparam) *  exp(-theta * (Xtrans[i, (j-1), k]) ) ) 
+        det.jump[i, (j-1), k] <- (True.Y[i, j, k] - True.Y[i, (j-1), k]) ## difference between the two means
+        mu[i, (j-1), k]       <- log(det.jump[i, (j-1), k]) - (1/sigsq.inv)*0.5
+        
+        phi[i, (j-1), k]    ~ dlnorm(mu[i, (j-1), k], sigsq.inv)
+        Ytrans[i, (j-1), k] ~ dpois(phi[i, (j-1), k])
+        
+      }
+    }
+  }
+}

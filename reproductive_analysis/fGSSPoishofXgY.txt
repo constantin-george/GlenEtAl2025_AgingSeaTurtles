@@ -1,0 +1,26 @@
+# Process error plus observation error model:
+fGSSPoishofXgY <- function(){
+  ### Parameters
+  sigsq.inv <- 1/pow(sigma,2)
+  
+  for(i in 1:ind){
+    ### initial value
+    True.Y[i, 1] <- Y[i, 1]
+    
+    for(j in 2:lens[i]){ # for each reproductive lifespan
+      
+      ### Likelihood function
+      
+      ### Trajectory: K * exp( e^(-theta * t) * log(n0/k) )
+      ### delta.t: difference in X[i] - X[(i-1)]
+      
+      True.Y[i, j]       <- Kparam * exp( log(True.Y[i, (j-1)]/Kparam) *  exp(-theta * (Xtrans[i, (j-1)]) ) ) 
+      det.jump[i, (j-1)] <- (True.Y[i, j] - True.Y[i,(j-1)]) ## difference between the two means
+      mu[i, (j-1)]       <- log(det.jump[i, (j-1)]) - (1/sigsq.inv)*0.5
+      
+      phi[i, (j-1)]    ~ dlnorm(mu[i, (j-1)], sigsq.inv)
+      Ytrans[i, (j-1)] ~ dpois(phi[i, (j-1)])
+      
+    }
+  }
+}
