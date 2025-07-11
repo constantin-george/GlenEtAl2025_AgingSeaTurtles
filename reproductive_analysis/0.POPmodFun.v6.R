@@ -858,7 +858,6 @@ pop.predict.trajectory <- function(K = K, models = models, MCMClist = MCMClist,
     # add a vertical line to separate trajectories (past last age of observed reproduction)
     segments( x0=max(rangeAGE)+(minAGE-1), x1=max(rangeAGE)+(minAGE-1), 
               y0=PRED[max(rangeAGE), 2], y1=PRED[max(rangeAGE), 4], 
-              ## -6 because line 765: +6 because 7 is the min age for a reproductive turtle
               lty=1, lwd=2, col = "#525064FF")
     
     x.ribbon <- c(traj.xs, rev(traj.xs))+(minAGE-1)
