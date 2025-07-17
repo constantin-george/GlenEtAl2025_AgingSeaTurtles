@@ -143,7 +143,7 @@ sjPlot::tab_model(best.mod,
 # diagnostics
 hist(best.mod$residuals, breaks = 20) #check for normality of the residuals
 qqnorm(best.mod$residuals) #check for normality of the residuals
-qqline(best.mod$residuals) #check for normality of the residuals
+qqline(best.mod$residuals) #check for n ormality of the residuals
 
 
 
@@ -156,8 +156,10 @@ contrast(emmeans(best.mod, ~ status, regrid = "response"),list(c(-1,1)))
 
 
 # Type I ANOVA table
-lm.NULL <- lm(model.forms$mFULLfixed, data = model.data, 
+lm.NULL <- lm(response ~ lnMASS + (lnmeanEX + Mean.AR.Female + lnafr) + status, 
+              data = model.data, 
               na.action = "na.omit")
+# anova_type2 <- car::Anova(lm.NULL, type = 2) # tests factors sequentially
 anova_type1 <- anova(lm.NULL) # tests factors sequentially
 anova_type1
 
@@ -166,13 +168,22 @@ sst_multiple <- sum(anova_type1$"Sum Sq") # Sum of all SS including residuals
 prop_var_type1 <- anova_type1$"Sum Sq" / sst_multiple
 names(prop_var_type1) <- rownames(anova_type1)
 print(round(prop_var_type1,2))
-sum(prop_var_type1[c(1:3,5)])
-# [1] 0.10708
-prop_var_type1[4]
+# lnMASS       lnmeanEX Mean.AR.Female          lnafr         status      Residuals 
+#   0.81           0.01           0.00           0.00           0.00           0.18 
+
+## proportion of variance explained by factors other than body mass
+sum(prop_var_type1[c(2:5)])
+# [1] 0.0055058
+
+## proportion of variation explained by body mass
+prop_var_type1[1]
 # lnMASS 
-# 0.71115 
+# 0.81272 
 
-
+## proportion of unexplained variation
+prop_var_type1[6]
+# Residuals 
+#   0.18177 
 
 #### ---------------------------------------------------------------------------
 #### Plots

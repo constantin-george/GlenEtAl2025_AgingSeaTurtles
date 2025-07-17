@@ -88,6 +88,8 @@ fit.BK <- gls(model.forms$mFULLfixed, data = model.data,
 options(digits=5)
 ICres <- ICtab( fit.OU, fit.lam, fit.BK, fit.BM, fit.NULL, type="BIC",
                 weights = T, delta = T, base = T, logLik = T)
+
+
 ICres
 #          logLik BIC    dLogLik dBIC   df weight
 # fit.NULL  120.5 -215.8  331.9     0.0 6  0.802 
