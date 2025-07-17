@@ -41,10 +41,19 @@ load.lib <- function(){
 
 ## load R data and tree
 data.path <- "/Users/constantingeorgeglen/Documents/University/UFL/RESEARCH/Projects_Analysis/Analysis_CTC/Main/2.CTCAnalyses/PhylogeneticAnalysis/scripts/20240516/PGLS/"
-load( paste0( data.path, "/submissionclean/model.data.RData") )
+load( paste0( data.path, "/submissionclean/model_data2025.RData") )
 
 
-
+## load excel data
+# model.data2 <- xlsx::read.xlsx("/Users/constantingeorgeglen/Documents/University/UFL/RESEARCH/Projects_Writing/PhDChapters/ch2.senescenceCTC/submission/Nature/supplementaryData/DataS4_testudinetraitdata.xlsx", sheetIndex = 1)
+# model.data2 <- model.data2 %>% filter(!(location %in% c("CTC - OTN", "CTC - MSN")))
+# model.data2$response <- log(model.data2$clutchMassKG)
+# model.data2$lnmeanEX <- log(model.data2$Mean.EX.Female)
+# model.data2$lnafr    <- log(model.data2$afr)
+# model.data2$lnMASS   <- log(model.data2$femaleMassKG)
+# model.data2$status   <- as.factor(model.data2$status)
+# model.data2 <- dplyr::select(model.data2, c(response, lnmeanEX, Mean.AR.Female, lnafr,
+#                                             lnMASS, status))
 
 #### ---------------------------------------------------------------------------
 #### Phylogenetic generalized least squares for reproductive mass
@@ -83,19 +92,18 @@ ICres <- bbmle::ICtab( fit.OU, fit.lam, fit.BK, fit.BM, fit.NULL, type="BIC",
                        weights = T, delta = T, base = T, logLik = T)
 ICres
 #          logLik BIC    dLogLik dBIC   df weight
-# fit.NULL  -51.4  131.9  215.7     0.0 7  0.8   
-# fit.OU    -51.4  136.1  215.7     4.2 8  0.1   
-# fit.lam   -51.4  136.1  215.7     4.2 8  0.1   
-# fit.BK   -235.8  500.7   31.3   368.8 7  <0.001
-# fit.BM   -267.1  563.3    0.0   431.4 7  <0.001
-
+# fit.NULL  -52.5  134.2  222.8     0.0 7  0.802 
+# fit.OU    -52.5  138.4  222.8     4.2 8  0.099 
+# fit.lam   -52.5  138.4  222.8     4.2 8  0.099 
+# fit.BK   -243.6  516.5   31.7   382.2 7  <0.001
+# fit.BM   -275.3  579.8    0.0   445.6 7  <0.001
 
 
 ### Calculate partial and total R2s
 rr2::R2_lik(fit.NULL); rr2::R2_lik(fit.OU); rr2::R2_lik(fit.lam); 
-# [1] 0.82034
-# [1] 0.82034
-# [1] 0.82034
+# [1] 0.81823
+# [1] 0.81823
+# [1] 0.81823
 
 
 #### ---------------------------------------------------------------------------
@@ -132,13 +140,6 @@ sjPlot::tab_model(best.mod,
                   collapse.ci = T, vcov.type = "HC0", digits = 2, p.val = "wald")
 
 
-### compare captive withg wild
-emmeans(best.mod, ~ status, regrid = "response")
-contrast(emmeans(best.mod, ~ status, regrid = "response"),list(c(-1,1)))
-# contrast estimate    SE df t.ratio p.value
-# c(-1, 1)   0.0219 0.175 58   0.125  0.9012
-
-
 # diagnostics
 hist(best.mod$residuals, breaks = 20) #check for normality of the residuals
 qqnorm(best.mod$residuals) #check for normality of the residuals
@@ -146,6 +147,30 @@ qqline(best.mod$residuals) #check for normality of the residuals
 
 
 
+### compare captive versus wild
+emmeans(best.mod, ~ status, regrid = "response")
+contrast(emmeans(best.mod, ~ status, regrid = "response"),list(c(-1,1)))
+# contrast estimate    SE df t.ratio p.value
+# c(-1, 1)   0.0485 0.167 60   0.290  0.7727
+
+
+
+# Type I ANOVA table
+lm.NULL <- lm(model.forms$mFULLfixed, data = model.data, 
+              na.action = "na.omit")
+anova_type1 <- anova(lm.NULL) # tests factors sequentially
+anova_type1
+
+# Total Sum of Squares (SST)
+sst_multiple <- sum(anova_type1$"Sum Sq") # Sum of all SS including residuals
+prop_var_type1 <- anova_type1$"Sum Sq" / sst_multiple
+names(prop_var_type1) <- rownames(anova_type1)
+print(round(prop_var_type1,2))
+sum(prop_var_type1[c(1:3,5)])
+# [1] 0.10708
+prop_var_type1[4]
+# lnMASS 
+# 0.71115 
 
 
 

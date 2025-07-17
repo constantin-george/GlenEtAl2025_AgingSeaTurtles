@@ -42,9 +42,18 @@ load.lib <- function(){
 
 ## load R data and tree
 data.path <- "/Users/constantingeorgeglen/Documents/University/UFL/RESEARCH/Projects_Analysis/Analysis_CTC/Main/2.CTCAnalyses/PhylogeneticAnalysis/scripts/20240516/PGLS/"
-load( paste0( data.path, "/submissionclean/model.data.RData") )
+load( paste0( data.path, "/submissionclean/model_data2025.RData") )
 model.data$lnAnnualRepOut <- log(model.data$AnnualRepOut)
 
+## load excel data
+# model.data2 <- xlsx::read.xlsx("/Users/constantingeorgeglen/Documents/University/UFL/RESEARCH/Projects_Writing/PhDChapters/ch2.senescenceCTC/submission/Nature/supplementaryData/DataS4_testudinetraitdata.xlsx", sheetIndex = 1)
+# model.data2 <- model.data2 %>% filter(!(location %in% c("CTC - OTN", "CTC - MSN")))
+# model.data2$lnAnnualRepOut <- log(model.data2$AnnualRepOut)
+# model.data2$lnafr    <- log(model.data2$afr)
+# model.data2$lnMASS   <- log(model.data2$femaleMassKG)
+# model.data2$status   <- as.factor(model.data2$status)
+# model.data2 <- dplyr::select(model.data2, c(lnAnnualRepOut, Mean.AR.Female, lnafr,
+#                                             lnMASS, status))
 
 
 #### ---------------------------------------------------------------------------
@@ -81,17 +90,17 @@ ICres <- ICtab( fit.OU, fit.lam, fit.BK, fit.BM, fit.NULL, type="BIC",
                 weights = T, delta = T, base = T, logLik = T)
 ICres
 #          logLik BIC    dLogLik dBIC   df weight
-# fit.NULL  117.0 -209.0  322.2     0.0 6  0.8   
-# fit.OU    117.0 -204.9  322.2     4.2 7  0.1   
-# fit.lam   117.0 -204.9  322.2     4.2 7  0.1   
-# fit.BK   -173.8  372.5   31.4   581.5 6  <0.001
-# fit.BM   -205.2  435.4    0.0   644.4 6  <0.001
+# fit.NULL  120.5 -215.8  331.9     0.0 6  0.802 
+# fit.OU    120.5 -211.6  331.9     4.2 7  0.099 
+# fit.lam   120.5 -211.6  331.9     4.2 7  0.099 
+# fit.BK   -179.6  384.3   31.8   600.1 6  <0.001
+# fit.BM   -211.4  448.0    0.0   663.8 6  <0.001
 
 
 ### Calculate partial and total R2s
 rr2::R2_lik(fit.OU); rr2::R2_lik(fit.lam); 
-# [1] 0.096248
-# [1] 0.096248
+# [1] 0.080175
+# [1] 0.080175
 
 
 #### ---------------------------------------------------------------------------
@@ -135,6 +144,27 @@ qqnorm(best.mod$residuals) #check for normality of the residuals
 qqline(best.mod$residuals) #check for normality of the residuals
 
 
+### compare captive withg wild
+emmeans(best.mod, ~ status, regrid = "response")
+contrast(emmeans(best.mod, ~ status, regrid = "response"),list(c(-1,1)))
+# contrast estimate    SE df t.ratio p.value
+# c(-1, 1)   0.0151 0.0123 61   1.231  0.2232
+
+
+
+# Type I ANOVA table
+lm.NULL <- lm(model.forms$mFULLfixed,data = model.data, 
+              na.action = "na.omit")
+anova_type1 <- anova(lm.NULL) # tests factors sequentially
+anova_type1
+
+# Total Sum of Squares (SST)
+sst_multiple <- sum(anova_type1$"Sum Sq") # Sum of all SS including residuals
+prop_var_type1 <- anova_type1$"Sum Sq" / sst_multiple
+names(prop_var_type1) <- rownames(anova_type1)
+print(round(prop_var_type1,2))
+sum(prop_var_type1[c(1:4)])
+# [1] 0.080175
 
 
 #### ---------------------------------------------------------------------------
